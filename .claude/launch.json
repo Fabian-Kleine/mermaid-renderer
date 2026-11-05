@@ -3,8 +3,10 @@
   "configurations": [
     {
       "name": "mermaid-renderer",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "dev"
+      ],
       "port": 5173
     }
   ]

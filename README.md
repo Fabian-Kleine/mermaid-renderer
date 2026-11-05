@@ -7,16 +7,26 @@ with full touch support for panning and zooming added.
 
 ## Running it
 
+This project uses [pnpm](https://pnpm.io). The exact version is pinned in
+`package.json` (`packageManager`), so with Corepack enabled the right one is
+picked up automatically.
+
 ```bash
-npm install
+pnpm install
 ```
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
-Other scripts: `npm run build` (typecheck + production build), `npm run preview`,
-`npm run lint`.
+Other scripts: `pnpm build` (typecheck + production build), `pnpm preview`,
+`pnpm lint`. To add shadcn/ui components, use `pnpm dlx shadcn@latest add <name>`.
+
+pnpm refuses to install any package version published less than a day ago
+(its `minimumReleaseAge` default), which guards against compromised releases.
+So a freshly published version will not resolve until it is a day old. If
+`pnpm install` reports `ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`, wait it out
+rather than adding an exemption.
 
 ## What it does
 
