@@ -1,0 +1,148 @@
+# Builds this repo and publishes it to https://lab.fabian-kleine.dev/<slug>/
+# Template source: Fabian-Kleine/lab-deploy (template/lab.yml). Only edit `env`.
+#
+# Needs repo secrets LAB_SSH_KEY and LAB_KNOWN_HOSTS.
+name: Lab
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: lab
+  cancel-in-progress: true
+
+env:
+  LAB_SLUG: "mermaid-renderer"
+  LAB_NAME: "mermaid-renderer"
+  LAB_DESCRIPTION: "a simple mermaid renderer with export functions"
+  LAB_BUILD: ""
+  LAB_OUT: "dist"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve settings
+        id: cfg
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          slug="${LAB_SLUG:-$REPO_NAME}"
+          slug="$(echo "$slug" | tr '[:upper:]' '[:lower:]')"
+          if ! [[ "$slug" =~ ^[a-z0-9][a-z0-9._-]{0,62}$ ]]; then
+            echo "::error::Invalid slug '$slug'"; exit 1
+          fi
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+          echo "LAB_BASE=/$slug/" >> "$GITHUB_ENV"
+          echo "OUT=${LAB_OUT:-dist}" >> "$GITHUB_ENV"
+          if   [ -f pnpm-lock.yaml ];    then pm=pnpm lock=pnpm-lock.yaml
+          elif [ -f yarn.lock ];         then pm=yarn lock=yarn.lock
+          elif [ -f package-lock.json ]; then pm=npm  lock=package-lock.json
+          else                                pm=npm  lock=""
+          fi
+          echo "pm=$pm" >> "$GITHUB_OUTPUT"
+          echo "lock=$lock" >> "$GITHUB_OUTPUT"
+          if [ -f package.json ]; then echo "node=true" >> "$GITHUB_OUTPUT"; fi
+          # pnpm/action-setup needs a version unless package.json pins one.
+          if [ "$pm" = pnpm ] && ! jq -e .packageManager package.json >/dev/null 2>&1; then
+            echo "pnpm_version=10" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.cfg.outputs.pm == 'pnpm'
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ steps.cfg.outputs.pnpm_version }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: ${{ steps.cfg.outputs.lock && steps.cfg.outputs.pm || '' }}
+          cache-dependency-path: ${{ steps.cfg.outputs.lock }}
+
+      - name: Install
+        if: steps.cfg.outputs.node == 'true' && env.LAB_BUILD == ''
+        run: |
+          case "${{ steps.cfg.outputs.pm }}" in
+            pnpm) pnpm install --frozen-lockfile ;;
+            yarn) yarn install --frozen-lockfile ;;
+            npm)  if [ -f package-lock.json ]; then npm ci; else npm install; fi ;;
+          esac
+
+      - name: Build
+        run: |
+          if [ -n "$LAB_BUILD" ]; then
+            eval "$LAB_BUILD"
+          elif [ "${{ steps.cfg.outputs.node }}" = true ]; then
+            # Appends to the "build" script, which normally ends in `vite build`.
+            # npm needs `--` to forward args; pnpm/yarn would pass it on to vite,
+            # which then ignores --base.
+            case "${{ steps.cfg.outputs.pm }}" in
+              npm) npm run build -- --base="$LAB_BASE" ;;
+              *)   ${{ steps.cfg.outputs.pm }} run build --base="$LAB_BASE" ;;
+            esac
+          else
+            # Plain static site: publish the tracked files as they are.
+            mkdir -p "$OUT"
+            git ls-files -z | grep -zvE '^(\.git|README\.md$|LICENSE$)' \
+              | xargs -0 cp --parents -t "$OUT"
+          fi
+
+      - name: Check asset paths
+        if: steps.cfg.outputs.node == 'true' || env.LAB_BUILD != ''
+        run: |
+          # Root-relative URLs must stay inside this app's folder.
+          bad=$(grep -oE '(src|href)="/[^/"][^"]*"' "$OUT/index.html" | grep -v "=\"$LAB_BASE" || true)
+          if [ -n "$bad" ]; then
+            echo "::error::index.html references paths outside $LAB_BASE (base not applied?):"
+            echo "$bad"; exit 1
+          fi
+
+      - name: Write lab.json
+        env:
+          DESCRIPTION: ${{ env.LAB_DESCRIPTION || github.event.repository.description }}
+        run: |
+          jq -n \
+            --arg name "$LAB_NAME" \
+            --arg description "$DESCRIPTION" \
+            --arg repo "${{ github.server_url }}/${{ github.repository }}" \
+            --arg commit "${{ github.sha }}" \
+            --arg builtAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{name: $name, description: $description, repo: $repo, commit: $commit,
+              builtAt: $builtAt, screenshot: "screenshot.png"}
+              | with_entries(select(.value != ""))' \
+            > "$OUT/lab.json"
+
+      - name: Upload and publish
+        env:
+          SSH_KEY: ${{ secrets.LAB_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.LAB_KNOWN_HOSTS }}
+          SLUG: ${{ steps.cfg.outputs.slug }}
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/lab && chmod 600 ~/.ssh/lab
+          echo "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh_cmd="ssh -i ~/.ssh/lab -o IdentitiesOnly=yes"
+          # Uploads land in a hidden staging area; `publish` swaps them in atomically.
+          rsync -rlz --delete --chmod=D2750,F640 -e "$ssh_cmd" "$OUT/" "labdeploy@lab.fabian-kleine.dev:$SLUG/"
+          $ssh_cmd labdeploy@lab.fabian-kleine.dev "publish $SLUG"
+          echo "### Deployed to https://lab.fabian-kleine.dev/$SLUG/" >> "$GITHUB_STEP_SUMMARY"
+
+      # Photograph the live page for the overview card. Never fails the deploy.
+      - name: Screenshot
+        continue-on-error: true
+        env:
+          SLUG: ${{ steps.cfg.outputs.slug }}
+          PLAYWRIGHT: playwright@1.49.1
+        run: |
+          url="https://lab.fabian-kleine.dev/$SLUG/"
+          npx -y "$PLAYWRIGHT" install --with-deps chromium >/dev/null
+          npx -y "$PLAYWRIGHT" screenshot -b chromium --viewport-size "1280, 800" \
+            --wait-for-timeout 2500 "$url" "$RUNNER_TEMP/screenshot.png"
+          ssh_cmd="ssh -i ~/.ssh/lab -o IdentitiesOnly=yes"
+          rsync -z --chmod=F640 -e "$ssh_cmd" "$RUNNER_TEMP/screenshot.png" "labdeploy@lab.fabian-kleine.dev:$SLUG/"
+          $ssh_cmd labdeploy@lab.fabian-kleine.dev "publish $SLUG"
+          echo "![screenshot](${url}screenshot.png)" >> "$GITHUB_STEP_SUMMARY"
