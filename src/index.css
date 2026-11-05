@@ -1,0 +1,219 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/space-grotesk";
+@import "@fontsource-variable/jetbrains-mono";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-heading: var(--font-sans);
+    --font-sans: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --color-canvas: var(--canvas);
+    --color-canvas-dot: var(--canvas-dot);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+    --radius: 0.5rem;
+
+    /* App shell: light slate background, dark ink */
+    --background: oklch(0.955 0.0045 247.9);
+    --foreground: oklch(0.247 0.0184 266.1);
+
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.247 0.0184 266.1);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.247 0.0184 266.1);
+
+    /* Teal accent */
+    --primary: oklch(0.683 0.1182 180.3);
+    --primary-foreground: oklch(0.189 0.0128 264.5);
+
+    --secondary: oklch(0.971 0.0032 247.9);
+    --secondary-foreground: oklch(0.247 0.0184 266.1);
+    --muted: oklch(0.971 0.0032 247.9);
+    --muted-foreground: oklch(0.625 0.0241 263.4);
+    --accent: oklch(0.683 0.1182 180.3 / 12%);
+    --accent-foreground: oklch(0.513 0.0957 180.6);
+
+    --destructive: oklch(0.619 0.1703 20.57);
+
+    --border: oklch(0.898 0.0074 247.9);
+    --input: oklch(0.898 0.0074 247.9);
+    --ring: oklch(0.683 0.1182 180.3);
+
+    --chart-1: oklch(0.683 0.1182 180.3);
+    --chart-2: oklch(0.513 0.0957 180.6);
+    --chart-3: oklch(0.625 0.0241 263.4);
+    --chart-4: oklch(0.619 0.1703 20.57);
+    --chart-5: oklch(0.247 0.0184 266.1);
+
+    /* Diagram canvas */
+    --canvas: oklch(1 0 0);
+    --canvas-dot: oklch(0.887 0.0088 247.9);
+
+    /* Dark sidebar, always dark in light mode too */
+    --sidebar: oklch(0.247 0.0184 266.1);
+    --sidebar-foreground: oklch(0.924 0.0096 264.5);
+    --sidebar-primary: oklch(0.683 0.1182 180.3);
+    --sidebar-primary-foreground: oklch(0.189 0.0128 264.5);
+    --sidebar-accent: oklch(0.296 0.0168 264.4);
+    --sidebar-accent-foreground: oklch(0.924 0.0096 264.5);
+    --sidebar-border: oklch(0.924 0.0096 264.5 / 12%);
+    --sidebar-ring: oklch(0.683 0.1182 180.3);
+}
+
+.dark {
+    --background: oklch(0.205 0.0152 266.1);
+    --foreground: oklch(0.924 0.0096 264.5);
+
+    --card: oklch(0.247 0.0184 266.1);
+    --card-foreground: oklch(0.924 0.0096 264.5);
+    --popover: oklch(0.247 0.0184 266.1);
+    --popover-foreground: oklch(0.924 0.0096 264.5);
+
+    --primary: oklch(0.683 0.1182 180.3);
+    --primary-foreground: oklch(0.189 0.0128 264.5);
+
+    --secondary: oklch(0.296 0.0168 264.4);
+    --secondary-foreground: oklch(0.924 0.0096 264.5);
+    --muted: oklch(0.296 0.0168 264.4);
+    --muted-foreground: oklch(0.682 0.0199 263.9);
+    --accent: oklch(0.683 0.1182 180.3 / 18%);
+    --accent-foreground: oklch(0.785 0.1163 180.1);
+
+    --destructive: oklch(0.683 0.1587 20.57);
+
+    --border: oklch(0.924 0.0096 264.5 / 12%);
+    --input: oklch(0.924 0.0096 264.5 / 16%);
+    --ring: oklch(0.683 0.1182 180.3);
+
+    --canvas: oklch(0.247 0.0184 266.1);
+    --canvas-dot: oklch(0.924 0.0096 264.5 / 16%);
+
+    --sidebar: oklch(0.205 0.0152 266.1);
+    --sidebar-foreground: oklch(0.924 0.0096 264.5);
+    --sidebar-primary: oklch(0.683 0.1182 180.3);
+    --sidebar-primary-foreground: oklch(0.189 0.0128 264.5);
+    --sidebar-accent: oklch(0.262 0.016 264.4);
+    --sidebar-accent-foreground: oklch(0.924 0.0096 264.5);
+    --sidebar-border: oklch(0.924 0.0096 264.5 / 10%);
+    --sidebar-ring: oklch(0.683 0.1182 180.3);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  html {
+    @apply font-sans;
+    }
+  html,
+  body,
+  #root {
+    @apply h-full;
+    }
+}
+
+@utility canvas-dots {
+  background-color: var(--canvas);
+  background-image: radial-gradient(circle, var(--canvas-dot) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* The stage holds raw mermaid output, so it is styled here rather than with utilities. */
+.diagram-stage > svg {
+  display: block;
+}
+
+/* ---------- Print / PDF export ---------- */
+
+#print-area {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    height: auto;
+    background: #fff;
+  }
+
+  /* Hide everything but the print pages, including dialogs and toasts that
+     portal straight into <body> rather than into #root. */
+  body > *:not(#print-area) {
+    display: none !important;
+  }
+
+  #print-area {
+    display: block !important;
+  }
+
+  #print-area .print-page {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  #print-area .print-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  #print-area .print-title {
+    font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
+    font-size: 11px;
+    color: #888;
+    margin: 0 0 14px;
+  }
+
+  #print-area .print-page svg {
+    max-width: 100%;
+    height: auto;
+  }
+}
