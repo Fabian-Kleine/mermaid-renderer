@@ -50,7 +50,7 @@ export function PasteDialog({ open, onOpenChange }: PasteDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Paste Mermaid code</DialogTitle>
           <DialogDescription>
@@ -58,7 +58,7 @@ export function PasteDialog({ open, onOpenChange }: PasteDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <FieldGroup>
+        <FieldGroup className="min-h-0 overflow-y-auto">
           <Field>
             <FieldLabel htmlFor="paste-name">File name</FieldLabel>
             <Input
@@ -74,7 +74,7 @@ export function PasteDialog({ open, onOpenChange }: PasteDialogProps) {
             <Textarea
               id="paste-code"
               spellCheck={false}
-              className="min-h-45 font-mono text-xs leading-relaxed"
+              className="max-h-[60dvh] min-h-45 overflow-y-auto font-mono text-xs leading-relaxed"
               placeholder={PLACEHOLDER}
               value={code}
               onChange={(event) => setCode(event.target.value)}
